@@ -62,6 +62,24 @@ class ImageMetadataExtractor:
         else:
             print("\nNo GPS metadata found.")
 
+    def display_metadata(self):
+        # Начинаем формировать текст для отображения
+        text_output = f"Image Mode: {self.image.mode}\n\nAll EXIF metadata:\n"
+        for key, val in self.exif_data.items():
+            if key != "GPSInfo":
+                text_output += f"{key}: {val}\n"
+
+        gps_info = self.get_gps_info()
+        if gps_info:
+            text_output += "\nGPS Metadata:\n"
+            for key, val in gps_info.items():
+                text_output += f"{key}: {val}\n"
+            lat, lon = self.get_coordinates()
+            text_output += f"\nDecoded GPS Coordinates:\nLatitude: {lat}\nLongitude: {lon}\n"
+        else:
+            text_output += "\nNo GPS metadata found.\n"
+
+        return text_output
 # Пример использования:
 if __name__ == "__main__":
     extractor = ImageMetadataExtractor("path_to_your_image.jpg")

@@ -1,3 +1,5 @@
+import os
+
 from PIL import Image
 from PIL.ExifTags import TAGS, GPSTAGS
 
@@ -80,6 +82,37 @@ class ImageMetadataExtractor:
             text_output += "\nNo GPS metadata found.\n"
 
         return text_output
+
+    def get_metadata_dict(self):
+        filename = os.path.basename(self.image_path)  # Получаем только имя файла с расширением
+
+        metadata = {
+            "NameFile": filename,
+            "Make": self.exif_data.get("Make"),
+            "Model": self.exif_data.get("Model"),
+            "Software": self.exif_data.get("Software"),
+            "DateTime": self.exif_data.get("DateTime"),
+            "HostComputer": self.exif_data.get("HostComputer"),
+            "Mode": self.image.mode,
+            "Flash": self.exif_data.get("Flash"),
+            "ColorSpace": self.exif_data.get("ColorSpace"),
+            "ExifImageWidth": self.exif_data.get("ExifImageWidth"),
+            "ExifImageHeight": self.exif_data.get("ExifImageHeight"),
+            "OffsetTime": self.exif_data.get("OffsetTime"),
+        }
+
+        gps_info = self.get_gps_info()
+        if gps_info:
+            latitude, longitude = self.get_coordinates()
+            metadata["Latitude"] = latitude
+            metadata["Longitude"] = longitude
+        else:
+            metadata["Latitude"] = None
+            metadata["Longitude"] = None
+
+        return metadata
+
+
 # Пример использования:
 if __name__ == "__main__":
     extractor = ImageMetadataExtractor("path_to_your_image.jpg")

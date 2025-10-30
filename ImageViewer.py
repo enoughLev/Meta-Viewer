@@ -1,6 +1,7 @@
 from PyQt6.QtCore import Qt, QPoint
 from PyQt6.QtWidgets import QLabel
-from PyQt6.QtGui import QPixmap, QPainter, QColor, QMouseEvent, QWheelEvent
+from PyQt6.QtGui import QPixmap, QPainter, QColor, QMouseEvent, QWheelEvent, QTransform
+
 
 class ImageViewer(QLabel):
     def __init__(self):
@@ -14,6 +15,26 @@ class ImageViewer(QLabel):
 
         self.setMinimumSize(591, 781)
         self.setStyleSheet("background-color: #333333;")
+
+        self.current_angle = 0
+
+    def rotate_clockwise_90(self):
+        if not self.pixmap_original:
+            return
+        # Увеличиваем угол поворота, чтобы отслеживать состояние, если нужно
+        self.current_angle = (self.current_angle + 90) % 360
+
+        transform = QTransform().rotate(90)  # По часовой стрелке - это -90 по Qt
+        self.pixmap_original = self.pixmap_original.transformed(transform, Qt.TransformationMode.SmoothTransformation)
+
+        # После поворота сбрасываем масштаб, можно настроить как нужно
+        label_size = self.size()
+        scale_w = label_size.width() / self.pixmap_original.width()
+        scale_h = label_size.height() / self.pixmap_original.height()
+        self.scale_factor = min(scale_w, scale_h, 1.0)
+
+        self.updatePixmap()
+
 
     def setImage(self, image_path):
         pix = QPixmap(image_path)

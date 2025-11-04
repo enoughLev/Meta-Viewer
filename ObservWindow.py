@@ -16,102 +16,96 @@ class ObserverWindow(QMainWindow, Ui_MainWindow):
     def __init__(self):
         super().__init__()
 
+        # Объявление переменных
+        self.record = None
+        self.dict_meta = None
+        self.db = MetadataDatabase("Database/MetaViewerDB.db")
+        self.file_path = ["C:\\Users\levch\Documents\ВУЗ\ЯП\\5 семестр (Python Web)\Семестровая_1\\img\\hello.png", "Static IMG"]
+
+        # Настройка формы
         self.setupUi(self)
         self.setWindowTitle("Главное окно")
         self.setWindowIcon(QIcon("C:\\Users\levch\Documents\ВУЗ\ЯП\\5 семестр (Python Web)\Семестровая_1\img\icon.png"))
+
+        # Создание дополнительных объектов
+        self.gallery_form = GalleryWindow()
+        self.image_viewer = ImageViewer()
+
+        # Настройка элементов формы
+        self.layout.addWidget(self.image_viewer)
         self.metadata_table.setHorizontalHeaderLabels(["", ""])
         self.metadata_table.setStyleSheet("background-color: #f0f0f0;")
         self.metadata_table.setColumnWidth(0, 170)
         self.metadata_table.setColumnWidth(1, 330)
-
         self.rotate_btn.setIcon(QIcon("C:\\Users\levch\Documents\ВУЗ\ЯП\\5 семестр (Python Web)\Семестровая_1\img\\rotate.png"))
 
-        self.file_path = ""
-        #self.file_path = ["C:\\Users\levch\Documents\ВУЗ\ЯП\\5 семестр (Python Web)\Семестровая_1\\var\\z.jpeg", "Static IMG"]
-
-        self.gallery_form = GalleryWindow()
-
-        self.image_viewer = ImageViewer()
-        self.layout.addWidget(self.image_viewer)
-        self.img_view = ImageViewer()
-
+        # Привязка действий к кнопкам
         self.open_gallery_btn.clicked.connect(self.open_gallery)
         self.choose_file_btn.clicked.connect(self.choose_file)
         self.rotate_btn.clicked.connect(self.image_viewer.rotate_clockwise_90)
         self.exit_btn.clicked.connect(self.close)
 
-
-
-    def load_data_to_tablewidget(self):
-        try:
-            self.conn = sqlite3.connect('Database/MetaViewerDB.db')
-            self.cursor = self.conn.cursor()
-
-            # Получаем первую запись из таблицы metadata_table
-            self.cursor.execute("SELECT * FROM metadata_table LIMIT 1")
-            record = self.cursor.fetchone()
-
-            if not record:
-                # Если данных нет - не меняем ключи в первом столбце, но очищаем значения во втором
-                row_count = self.metadata_table.rowCount()
-                for row in range(row_count):
-                    self.metadata_table.setItem(row, 1, QTableWidgetItem(""))
-                return
-
-            # Получаем названия колонок (ключи), исключая 'id'
-            column_names = [desc[0] for desc in self.cursor.description]
-            if 'id' in column_names:
-                id_index = column_names.index('id')
-                # Убираем id из списков и записи
-                column_names.pop(id_index)
-                record = tuple(value for i, value in enumerate(record) if i != id_index)
-
-            # Определяем порядок ключей без id, соответствующий rows в таблице на форме
-            keys_order = [
-                "Make", "Model", "Software", "DateTime",
-                "HostComputer", "Mode", "Flash", "ColorSpace",
-                "ExifImageWidth", "ExifImageHeight", "OffsetTime",
-                "Latitude", "Longitude", "NameFile"
-            ]
-
-            for row, key in enumerate(keys_order):
-                try:
-                    idx = column_names.index(key)
-                    val = record[idx] if record[idx] is not None else ""
-                except ValueError:
-                    val = ""
-                self.metadata_table.setItem(row, 1, QTableWidgetItem(str(val)))
-
-        except sqlite3.Error as e:
-            print(f"Ошибка при работе с базой данных: {e}")
-        except Exception as e:
-            print(f"Неизвестная ошибка: {e}")
-
+        # Стандартное представление
+        self.image_viewer.setImage(self.file_path[0])
 
 
     def open_gallery(self):
         self.gallery_form.show()
 
     def choose_file(self):
-        self.file_path = QFileDialog.getOpenFileName(self, 'Выбор файла', "C:\\Users\levch\Downloads\Phone Link", 'Изображения (*.png *.jpg *.jpeg)')
-        print(self.file_path)
-        metadata = ImageMetadataExtractor(self.file_path[0])
+        try:
+            print("\nНОВЫЙ ВЫВОД:\n\n")
+            self.file_path = QFileDialog.getOpenFileName(self, 'Выбор файла', "C:\\Users\levch\Downloads\Phone Link", 'Изображения (*.png *.jpg *.jpeg)')
+            if not self.file_path:
+                print("Файл не выбран.")
+                return
 
-        dict_meta = metadata.get_metadata_dict()
-        print(dict_meta)
-        db = MetadataDatabase("Database/MetaViewerDB.db")
-        db.connect()
-        db.insert_metadata(dict_meta)
-        db.insert_image(self.file_path[0])
-        record = db.fetch_metadata_by_id(1)
-        self.load_data_to_tablewidget()
-        #print(record)
-        db.close()
-        metadata.print_all_metadata()
-        #self.metadata_label.setText(metadata.display_metadata())
-        self.image_viewer.setImage(self.file_path[0])
-        if "jpeg" in self.file_path[0]:
-            self.image_viewer.rotate_clockwise_90()
+            #print("Объект выбора файла:\n\t", self.file_path)
+            self.image_viewer.setImage(self.file_path[0])
+
+            if self.file_path[0].lower().endswith("jpeg"):
+                self.image_viewer.rotate_clockwise_90()
+
+            self.catch_metadata()
+            self.insert_to_database()
+            self.filling_table()
+
+        except Exception as e:
+            print(f"Ошибка при выборе или обработке файла: {e}")
+
+    def catch_metadata(self):
+        metadata = ImageMetadataExtractor(self.file_path[0])
+        self.dict_meta = metadata.get_metadata_dict()
+        print("Caught metadata in dictionary (for insert into DataBase):\n\t", self.dict_meta)
+
+    def insert_to_database(self):
+        try:
+            self.db.connect()
+            self.db.insert_metadata(self.dict_meta)
+            self.db.insert_image(self.file_path[0])
+            self.db.close()
+
+        except Exception as e:
+            print(f"Ошибка при добавлении в базу данных: {e}")
+
+
+    def filling_table(self):
+        keys_order = [
+            "NameFile","Make", "Model", "Software", "DateTime",
+            "HostComputer", "Mode", "Flash", "ColorSpace",
+            "ExifImageWidth", "ExifImageHeight", "OffsetTime",
+            "Latitude", "Longitude"
+        ]
+
+        if self.dict_meta is None:
+            row_count = self.metadata_table.rowCount()
+            for row in range(row_count):
+                self.metadata_table.setItem(row, 1, QTableWidgetItem(""))
+            return
+
+        for row, key in enumerate(keys_order):
+            val = self.dict_meta.get(key, "") if self.dict_meta.get(key) is not None else ""
+            self.metadata_table.setItem(row, 1, QTableWidgetItem(str(val)))
 
 
 

@@ -136,7 +136,7 @@
     <column/>
     <item row="0" column="0">
      <property name="text">
-      <string>Make</string>
+      <string>FileName</string>
      </property>
      <property name="font">
       <font>
@@ -162,7 +162,7 @@
     </item>
     <item row="1" column="0">
      <property name="text">
-      <string>Model</string>
+      <string>Make</string>
      </property>
      <property name="font">
       <font>
@@ -188,7 +188,7 @@
     </item>
     <item row="2" column="0">
      <property name="text">
-      <string>Software</string>
+      <string>Model</string>
      </property>
      <property name="font">
       <font>
@@ -214,7 +214,7 @@
     </item>
     <item row="3" column="0">
      <property name="text">
-      <string>DateTime</string>
+      <string>Software</string>
      </property>
      <property name="font">
       <font>
@@ -240,7 +240,7 @@
     </item>
     <item row="4" column="0">
      <property name="text">
-      <string>HostComputer</string>
+      <string>DateTime</string>
      </property>
      <property name="font">
       <font>
@@ -266,7 +266,7 @@
     </item>
     <item row="5" column="0">
      <property name="text">
-      <string>Mode</string>
+      <string>HostComputer</string>
      </property>
      <property name="font">
       <font>
@@ -292,7 +292,7 @@
     </item>
     <item row="6" column="0">
      <property name="text">
-      <string>Flash</string>
+      <string>Mode</string>
      </property>
      <property name="font">
       <font>
@@ -318,7 +318,7 @@
     </item>
     <item row="7" column="0">
      <property name="text">
-      <string>ColorSpace</string>
+      <string>Flash</string>
      </property>
      <property name="font">
       <font>
@@ -344,7 +344,7 @@
     </item>
     <item row="8" column="0">
      <property name="text">
-      <string>ExifImageWidth</string>
+      <string>ColorSpace</string>
      </property>
      <property name="font">
       <font>
@@ -370,7 +370,7 @@
     </item>
     <item row="9" column="0">
      <property name="text">
-      <string>ExifImageHeight </string>
+      <string>ExifImageWidth</string>
      </property>
      <property name="font">
       <font>
@@ -396,7 +396,7 @@
     </item>
     <item row="10" column="0">
      <property name="text">
-      <string>OffsetTime (UTC)</string>
+      <string>ExifImageHeight</string>
      </property>
      <property name="font">
       <font>
@@ -422,7 +422,7 @@
     </item>
     <item row="11" column="0">
      <property name="text">
-      <string>Latitude</string>
+      <string>OffsetTime (UTC)</string>
      </property>
      <property name="font">
       <font>
@@ -448,7 +448,7 @@
     </item>
     <item row="12" column="0">
      <property name="text">
-      <string>Longitude</string>
+      <string>Latitude</string>
      </property>
      <property name="font">
       <font>
@@ -474,7 +474,7 @@
     </item>
     <item row="13" column="0">
      <property name="text">
-      <string>FileName</string>
+      <string>Longitude</string>
      </property>
      <property name="font">
       <font>

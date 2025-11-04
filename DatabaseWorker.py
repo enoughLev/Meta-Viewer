@@ -12,8 +12,6 @@ class MetadataDatabase:
         if hasattr(self, 'conn'):
             self.conn.close()
 
-    import sqlite3
-
     def insert_metadata(self, data):
         """
         Вставляет данные в таблицу с указанными полями.
@@ -26,7 +24,7 @@ class MetadataDatabase:
 
         placeholders = ', '.join('?' for _ in columns.split(', '))
 
-        sql = f"INSERT OR REPLACE INTO metadata_table ({columns}) VALUES ({placeholders})"
+        sql = f"INSERT INTO metadata_table ({columns}) VALUES ({placeholders})"
 
         try:
             int_fields = ['Flash', 'ColorSpace', 'ExifImageWidth', 'ExifImageHeight']
@@ -75,7 +73,7 @@ class MetadataDatabase:
             print(f"Неизвестная ошибка при вставке изображения: {e}")
 
     def fetch_metadata_by_id(self, record_id):
-        sql = "SELECT * FROM metadata_table WHERE id=?"
+        sql = "SELECT * FROM metadata_table WHERE NameFile=?"
         self.cursor.execute(sql, (record_id,))
         row = self.cursor.fetchone()
         if row:
@@ -83,3 +81,29 @@ class MetadataDatabase:
             return dict(zip(columns, row))
         else:
             return None
+
+    def fetch_metadata_by_filename(self, filename):
+        try:
+            conn = sqlite3.connect(self.db_path)
+            conn.row_factory = sqlite3.Row  # Позволяет получать строки как словари
+            cursor = conn.cursor()
+
+            query = "SELECT * FROM metadata_table WHERE NameFile = ?"
+            cursor.execute(query, (filename,))
+            row = cursor.fetchone()
+
+            if not row:
+                return None
+
+            # Преобразуем sqlite3.Row в обычный словарь, исключая ключ 'id'
+            result = {key: row[key] for key in row.keys() if key != 'id'}
+
+            return result
+
+        except sqlite3.Error as e:
+            print(f"Ошибка при работе с базой данных: {e}")
+            return None
+        except Exception as e:
+            print(f"Неизвестная ошибка: {e}")
+            return None
+

@@ -11,6 +11,7 @@ from Forms.ObservForm_ui import Ui_MainWindow
 from ImageViewer import ImageViewer
 from MetadataExtractor import ImageMetadataExtractor
 from DatabaseWorker import MetadataDatabase
+from YandexStaticApiWorker import YandexMapHandler
 
 class ObserverWindow(QMainWindow, Ui_MainWindow):
     def __init__(self):
@@ -19,6 +20,7 @@ class ObserverWindow(QMainWindow, Ui_MainWindow):
         # Объявление переменных
         self.record = None
         self.dict_meta = None
+        #self.map_viewer_size = self.map_label.size()
         self.db = MetadataDatabase("Database/MetaViewerDB.db")
         self.file_path = ["C:\\Users\levch\Documents\ВУЗ\ЯП\\5 семестр (Python Web)\Семестровая_1\\img\\hello.png", "Static IMG"]
 
@@ -54,7 +56,7 @@ class ObserverWindow(QMainWindow, Ui_MainWindow):
 
     def choose_file(self):
         try:
-            print("\nНОВЫЙ ВЫВОД:\n\n")
+            print("\nНОВЫЙ ВЫВОД:")
             self.file_path = QFileDialog.getOpenFileName(self, 'Выбор файла', "C:\\Users\levch\Downloads\Phone Link", 'Изображения (*.png *.jpg *.jpeg)')
             if not self.file_path:
                 print("Файл не выбран.")
@@ -69,9 +71,24 @@ class ObserverWindow(QMainWindow, Ui_MainWindow):
             self.catch_metadata()
             self.insert_to_database()
             self.filling_table()
+            self.view_map(13) # Указываем увеличение, default = 13
 
         except Exception as e:
             print(f"Ошибка при выборе или обработке файла: {e}")
+
+    def view_map(self, zoom):
+        if self.dict_meta["Latitude"] and self.dict_meta["Longitude"]:
+            try:
+                lat = float(self.dict_meta.get("Latitude"))
+                lon = float(self.dict_meta.get("Longitude"))
+            except (TypeError, ValueError):
+                return False
+
+            mini_map = YandexMapHandler(lat, lon)
+            pixmap = mini_map.view_map(self.map_label.width(), self.map_label.height(), zoom)
+            self.map_label.setPixmap(pixmap)
+        else:
+            self.map_label.clear()
 
     def catch_metadata(self):
         metadata = ImageMetadataExtractor(self.file_path[0])

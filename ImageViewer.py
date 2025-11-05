@@ -6,6 +6,7 @@ from PyQt6.QtGui import QPixmap, QPainter, QColor, QMouseEvent, QWheelEvent, QTr
 class ImageViewer(QLabel):
     def __init__(self):
         super().__init__()
+        self._center_offset_computed = None
         self.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.pixmap_original = None
         self.scale_factor = 1.0

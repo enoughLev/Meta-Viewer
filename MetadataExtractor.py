@@ -26,7 +26,8 @@ class ImageMetadataExtractor:
                 gps_info[decode] = self.exif_data["GPSInfo"][key]
         return gps_info
 
-    def convert_to_degrees(self, value):
+    @staticmethod
+    def convert_to_degrees(value):
         d = value[0].numerator / value[0].denominator
         m = value[1].numerator / value[1].denominator
         s = value[2].numerator / value[2].denominator

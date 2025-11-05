@@ -17,9 +17,9 @@
    <widget class="QPushButton" name="open_gallery_btn">
     <property name="geometry">
      <rect>
-      <x>770</x>
-      <y>650</y>
-      <width>331</width>
+      <x>750</x>
+      <y>710</y>
+      <width>201</width>
       <height>41</height>
      </rect>
     </property>
@@ -41,8 +41,8 @@
    <widget class="QPushButton" name="choose_file_btn">
     <property name="geometry">
      <rect>
-      <x>600</x>
-      <y>650</y>
+      <x>590</x>
+      <y>710</y>
       <width>151</width>
       <height>41</height>
      </rect>
@@ -517,6 +517,19 @@
     </property>
     <property name="alignment">
      <set>Qt::AlignCenter</set>
+    </property>
+   </widget>
+   <widget class="QLabel" name="map_label">
+    <property name="geometry">
+     <rect>
+      <x>590</x>
+      <y>520</y>
+      <width>501</width>
+      <height>181</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string/>
     </property>
    </widget>
   </widget>

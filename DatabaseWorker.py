@@ -2,6 +2,8 @@ import sqlite3
 
 class MetadataDatabase:
     def __init__(self, db_path):
+        self.cursor = None
+        self.conn = None
         self.db_path = db_path
 
     def connect(self):

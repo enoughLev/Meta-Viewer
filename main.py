@@ -1,6 +1,6 @@
 import sys
 from PyQt6.QtWidgets import QApplication
-from ObserveWindow import ObserverWindow
+from windows.ObserveWindow import ObserverWindow
 
 def main():
     app = QApplication(sys.argv)

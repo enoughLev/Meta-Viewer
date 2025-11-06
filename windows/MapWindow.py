@@ -1,7 +1,7 @@
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import QMainWindow, QWidget, QPushButton, QVBoxLayout
 from Forms.MapForm_ui import Ui_Form
-from YandexStaticApiWorker import YandexMapHandler
+from workers.YandexStaticApiWorker import YandexMapHandler
 #import logging
 
 #logging.basicConfig(level=logging.DEBUG, format='%(asctime)s %(levelname)s: %(message)s')

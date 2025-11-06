@@ -11,10 +11,10 @@ from MapWindow import MapWindow
 from Forms.ObserveForm_ui import Ui_MainWindow
 
 
-from ImageViewWoker import ImageViewer
-from MetadataWorker import ImageMetadataExtractor
-from DatabaseWorker import MetadataDatabase
-from YandexStaticApiWorker import YandexMapHandler
+from workers.ImageViewWoker import ImageViewer
+from workers.MetadataWorker import ImageMetadataExtractor
+from workers.DatabaseWorker import MetadataDatabase
+from workers.YandexStaticApiWorker import YandexMapHandler
 
 class ObserverWindow(QMainWindow, Ui_MainWindow):
     def __init__(self):

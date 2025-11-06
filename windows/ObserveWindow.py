@@ -6,8 +6,8 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QTransform, QIcon
 from PyQt6.QtWidgets import QMainWindow, QFileDialog, QPushButton, QTableWidgetItem
 
-from GaleryWindow import GalleryWindow
-from MapWindow import MapWindow
+from windows.GaleryWindow import GalleryWindow
+from windows.MapWindow import MapWindow
 from Forms.ObserveForm_ui import Ui_MainWindow
 
 
@@ -91,7 +91,10 @@ class ObserverWindow(QMainWindow, Ui_MainWindow):
     def choose_file(self):
         try:
             print("\nНОВЫЙ ВЫВОД:")
-            self.file_path = QFileDialog.getOpenFileName(self, 'Выбор файла', "C:\\Users\levch\Downloads\Phone Link", 'Изображения (*.png *.jpg *.jpeg)')
+            self.file_path = QFileDialog.getOpenFileName(self, 'Выбор файла',
+                                                         self.resource_path("\\var"),
+                                                         'Изображения (*.png *.jpg *.jpeg)')
+            #self.file_path = QFileDialog.getOpenFileName(self, 'Выбор файла', "C:\\Users\levch\Documents\ВУЗ\ЯП\\5 семестр (Python Web)\Семестровая_1\\var", 'Изображения (*.png *.jpg *.jpeg)')
             if not self.file_path:
                 print("Файл не выбран.")
                 return

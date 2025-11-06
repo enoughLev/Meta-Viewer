@@ -3,12 +3,16 @@ import os
 from PIL import Image
 from PIL.ExifTags import TAGS, GPSTAGS
 
+
 class ImageMetadataExtractor:
     def __init__(self, image_path):
         self.image_path = image_path
         self.image = Image.open(image_path)
         self.exif_data = self.get_exif_data()
 
+
+    # Функция для извлечения метаданных из фото
+    # использует определенные области в HEX-коде изображения и парсит их в определенные данные
     def get_exif_data(self):
         exif_data = {}
         info = self.image._getexif()
@@ -18,6 +22,8 @@ class ImageMetadataExtractor:
                 exif_data[decoded] = value
         return exif_data
 
+
+    # Аналогично с предыдущей
     def get_gps_info(self):
         gps_info = {}
         if "GPSInfo" in self.exif_data:
@@ -26,6 +32,8 @@ class ImageMetadataExtractor:
                 gps_info[decode] = self.exif_data["GPSInfo"][key]
         return gps_info
 
+
+    # Необходимо для приведения в формат Широты-Долготы
     @staticmethod
     def convert_to_degrees(value):
         d = value[0].numerator / value[0].denominator
@@ -34,6 +42,8 @@ class ImageMetadataExtractor:
         degrees = d + (m / 60.0) + (s / 3600.0)
         return degrees
 
+
+    # Получает координаты и парсит в формат Широты-Долготы
     def get_coordinates(self):
         gps_info = self.get_gps_info()
         lat = None
@@ -48,6 +58,8 @@ class ImageMetadataExtractor:
                 lon = -lon
         return lat, lon
 
+
+    # Отладочная функция для просмотра всех полученных метаданных
     def print_all_metadata(self):
         print("All EXIF metadata:")
         print(f"Mode: {self.image.mode}")
@@ -65,25 +77,8 @@ class ImageMetadataExtractor:
         else:
             print("\nNo GPS metadata found.")
 
-    def display_metadata(self):
-        # Начинаем формировать текст для отображения
-        text_output = f"Image Mode: {self.image.mode}\n\nAll EXIF metadata:\n"
-        for key, val in self.exif_data.items():
-            if key != "GPSInfo":
-                text_output += f"{key}: {val}\n"
 
-        gps_info = self.get_gps_info()
-        if gps_info:
-            text_output += "\nGPS Metadata:\n"
-            for key, val in gps_info.items():
-                text_output += f"{key}: {val}\n"
-            lat, lon = self.get_coordinates()
-            text_output += f"\nDecoded GPS Coordinates:\nLatitude: {lat}\nLongitude: {lon}\n"
-        else:
-            text_output += "\nNo GPS metadata found.\n"
-
-        return text_output
-
+    # Получение метаданных в формате словаря
     def get_metadata_dict(self):
         filename = os.path.basename(self.image_path)  # Получаем только имя файла с расширением
 
@@ -114,7 +109,3 @@ class ImageMetadataExtractor:
         return metadata
 
 
-# Пример использования:
-if __name__ == "__main__":
-    extractor = ImageMetadataExtractor("path_to_your_image.jpg")
-    extractor.print_all_metadata()

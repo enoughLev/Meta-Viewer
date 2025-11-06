@@ -6,9 +6,15 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1130</width>
+    <width>1099</width>
     <height>775</height>
    </rect>
+  </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
   </property>
   <property name="windowTitle">
    <string>MainWindow</string>
@@ -73,7 +79,7 @@
      <rect>
       <x>950</x>
       <y>710</y>
-      <width>151</width>
+      <width>141</width>
       <height>41</height>
      </rect>
     </property>
@@ -102,6 +108,9 @@
       <width>503</width>
       <height>431</height>
      </rect>
+    </property>
+    <property name="showGrid">
+     <bool>true</bool>
     </property>
     <property name="rowCount">
      <number>14</number>

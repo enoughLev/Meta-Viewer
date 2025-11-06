@@ -6,25 +6,77 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>524</width>
-    <height>392</height>
+    <width>800</width>
+    <height>575</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Form</string>
   </property>
-  <widget class="QPushButton" name="to_main_btn">
+  <widget class="QTableWidget" name="galery_table">
    <property name="geometry">
     <rect>
-     <x>160</x>
-     <y>160</y>
-     <width>181</width>
-     <height>51</height>
+     <x>0</x>
+     <y>0</y>
+     <width>800</width>
+     <height>581</height>
     </rect>
    </property>
-   <property name="text">
-    <string>Вернуться</string>
+   <property name="styleSheet">
+    <string notr="true">background-color: #f0f0f0;</string>
    </property>
+   <property name="rowCount">
+    <number>1</number>
+   </property>
+   <property name="columnCount">
+    <number>3</number>
+   </property>
+   <attribute name="horizontalHeaderVisible">
+    <bool>false</bool>
+   </attribute>
+   <attribute name="horizontalHeaderCascadingSectionResizes">
+    <bool>false</bool>
+   </attribute>
+   <attribute name="horizontalHeaderMinimumSectionSize">
+    <number>50</number>
+   </attribute>
+   <attribute name="horizontalHeaderDefaultSectionSize">
+    <number>500</number>
+   </attribute>
+   <attribute name="verticalHeaderVisible">
+    <bool>false</bool>
+   </attribute>
+   <attribute name="verticalHeaderDefaultSectionSize">
+    <number>300</number>
+   </attribute>
+   <row/>
+   <column/>
+   <column/>
+   <column/>
+   <item row="0" column="0">
+    <property name="text">
+     <string/>
+    </property>
+    <property name="flags">
+     <set>NoItemFlags</set>
+    </property>
+   </item>
+   <item row="0" column="1">
+    <property name="text">
+     <string/>
+    </property>
+    <property name="flags">
+     <set>NoItemFlags</set>
+    </property>
+   </item>
+   <item row="0" column="2">
+    <property name="text">
+     <string/>
+    </property>
+    <property name="flags">
+     <set>ItemIsDragEnabled|ItemIsDropEnabled|ItemIsUserCheckable|ItemIsEnabled</set>
+    </property>
+   </item>
   </widget>
  </widget>
  <resources/>

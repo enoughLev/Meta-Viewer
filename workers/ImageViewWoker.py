@@ -2,33 +2,38 @@ from PyQt6.QtCore import Qt, QPoint
 from PyQt6.QtWidgets import QLabel
 from PyQt6.QtGui import QPixmap, QPainter, QColor, QMouseEvent, QWheelEvent, QTransform
 
+'''
+Огромный и сложный класс для красивого размещения фото в главном окне...
+'''
+
 
 class ImageViewer(QLabel):
     def __init__(self):
         super().__init__()
-        self._center_offset_computed = None
         self.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.pixmap_original = None
-        self.scale_factor = 1.0
-        self.dragging = False
-        self.drag_start_pos = QPoint()
-        self.offset = QPoint(0, 0)  # Смещение картинки
-
         self.setMinimumSize(591, 781)
         self.setStyleSheet("background-color: #333333;")
 
+        self._center_offset_computed = None
+        self.pixmap_original = None
+        self.scale_factor = 1.0
+        self.dragging = False
         self.current_angle = 0
 
+        self.drag_start_pos = QPoint()  # Объект для центровки фото
+        self.offset = QPoint(0, 0)
+
+
+    # Функция для поворота изображения
     def rotate_clockwise_90(self):
         if not self.pixmap_original:
             return
-        # Увеличиваем угол поворота, чтобы отслеживать состояние, если нужно
-        self.current_angle = (self.current_angle + 90) % 360
+        self.current_angle = (self.current_angle + 90) % 180
 
-        transform = QTransform().rotate(90)  # По часовой стрелке - это -90 по Qt
-        self.pixmap_original = self.pixmap_original.transformed(transform, Qt.TransformationMode.SmoothTransformation)
-
-        # После поворота сбрасываем масштаб, можно настроить как нужно
+        transform = (QTransform())
+        transform.rotate(90)
+        transform.translate(0, -self.pixmap_original.width())
+        self.pixmap_original = self.pixmap_original.transformed(transform)
         label_size = self.size()
         scale_w = label_size.width() / self.pixmap_original.width()
         scale_h = label_size.height() / self.pixmap_original.height()
@@ -37,10 +42,11 @@ class ImageViewer(QLabel):
         self.updatePixmap()
 
 
+    # Установка изображения в область
     def setImage(self, image_path):
         pix = QPixmap(image_path)
         if pix.isNull():
-            print("Ошибка загрузки изображения")
+            print("Error with load image")
             return
         self.pixmap_original = pix
 
@@ -59,6 +65,8 @@ class ImageViewer(QLabel):
         self.setAlignment(Qt.AlignmentFlag.AlignCenter)  # Центрируем изображение
         self.setPixmap(scaled_pix)
 
+
+    # Обновляет состояние изображения после перетаскивания/увеличения масштаба
     def updatePixmap(self):
         if not self.pixmap_original:
             return
@@ -73,8 +81,6 @@ class ImageViewer(QLabel):
         final_pix = QPixmap(self.size())
         final_pix.fill(QColor("#333333"))
 
-        # Вычисляем позицию, чтобы центрировать изображение в виджете,
-        # если offset не был установлен (т.е. при первом обновлении)
         if not hasattr(self, '_center_offset_computed'):
             self.offset = QPoint(
                 (self.width() - scaled_pix.width()) // 2,
@@ -88,6 +94,8 @@ class ImageViewer(QLabel):
 
         self.setPixmap(final_pix)
 
+
+    # Перегрузка прокручивания колеса мыши
     def wheelEvent(self, event: QWheelEvent):
         if self.pixmap_original is None:
             return
@@ -101,15 +109,11 @@ class ImageViewer(QLabel):
 
         self.scale_factor = max(0.1, min(self.scale_factor, 5))
 
-        # Координаты курсора относительно виджета
         pos = event.position().toPoint()
 
-        # Рассчитываем смещение для сохранения позиции под курсором
-        # Относительная позиция курсора по отношению к пиксельной позиции изображения до масштабирования
         delta_x = pos.x() - self.offset.x()
         delta_y = pos.y() - self.offset.y()
 
-        # Рассчитываем новое смещение, чтобы позиция под курсором осталась на месте
         new_offset_x = pos.x() - (delta_x * (self.scale_factor / old_scale))
         new_offset_y = pos.y() - (delta_y * (self.scale_factor / old_scale))
 
@@ -117,11 +121,15 @@ class ImageViewer(QLabel):
 
         self.updatePixmap()
 
+
+    # Перегрузка для перетаскивания изображения
     def mousePressEvent(self, event: QMouseEvent):
         if event.button() == Qt.MouseButton.LeftButton:
             self.dragging = True
             self.drag_start_pos = event.pos()
 
+
+    # Перегрузка для перетаскивания изображения
     def mouseMoveEvent(self, event: QMouseEvent):
         if self.dragging:
             delta = event.pos() - self.drag_start_pos
@@ -129,6 +137,8 @@ class ImageViewer(QLabel):
             self.drag_start_pos = event.pos()
             self.updatePixmap()
 
+
+    # Перегрузка для перетаскивания изображения
     def mouseReleaseEvent(self, event: QMouseEvent):
         if event.button() == Qt.MouseButton.LeftButton:
             self.dragging = False

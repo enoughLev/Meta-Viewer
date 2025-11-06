@@ -1,20 +1,20 @@
 import os
-import sqlite3
 import sys
 
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QTransform, QIcon
-from PyQt6.QtWidgets import QMainWindow, QFileDialog, QPushButton, QTableWidgetItem
+from PyQt6.QtGui import QIcon
+from PyQt6.QtWidgets import QMainWindow, QFileDialog, QTableWidgetItem
 
-from windows.GaleryWindow import GalleryWindow
-from windows.MapWindow import MapWindow
+from Windows.GalleryWindow import GalleryWindow
+from Windows.MapWindow import MapWindow
+from Workers.ImageViewWoker import ImageViewer
+
+from Workers.MetadataWorker import ImageMetadataExtractor
+from Workers.DatabaseWorker import MetadataDatabase
+from Workers.YandexStaticApiWorker import YandexMapHandler
+
 from Forms.ObserveForm_ui import Ui_MainWindow
 
-
-from workers.ImageViewWoker import ImageViewer
-from workers.MetadataWorker import ImageMetadataExtractor
-from workers.DatabaseWorker import MetadataDatabase
-from workers.YandexStaticApiWorker import YandexMapHandler
 
 class ObserverWindow(QMainWindow, Ui_MainWindow):
     def __init__(self):
@@ -22,16 +22,15 @@ class ObserverWindow(QMainWindow, Ui_MainWindow):
 
         # Настройка формы
         self.setupUi(self)
-        self.setWindowTitle("Главное окно")
+        self.setWindowTitle("MetaViewer")
         self.setWindowIcon(QIcon(self.resource_path("\img\\icon.png")))
-
+        self.setFixedSize(1099, 775)
         # Объявление переменных
         self.map_form = None
         self.record = None
         self.dict_meta = None
 
         self.db = MetadataDatabase(self.resource_path("\Database\MetaViewerDB.db"))
-        #self.db = MetadataDatabase("Database/MetaViewerDB.db")
         self.file_path = [self.resource_path("\img\\hello.png"), "Static IMG"]
 
         # Создание дополнительных объектов
@@ -55,9 +54,12 @@ class ObserverWindow(QMainWindow, Ui_MainWindow):
         self.map_label.mousePressEvent = self.handle_map_label_click
 
 
+    # Функция для открытия полномасштабной карты по нажатию на картинку мини-карты
     def handle_map_label_click(self, event):
         self.open_full_size_map()
 
+
+    # Функция для открытия окна с полномасштабной картой и передачей в форму координат
     def open_full_size_map(self):
         try:
             if self.dict_meta["Latitude"] and self.dict_meta["Longitude"]:
@@ -67,9 +69,10 @@ class ObserverWindow(QMainWindow, Ui_MainWindow):
                 self.map_form.show()
 
         except Exception as e:
-            print(f"Ошибка при открытии карты: {e}")
+            print(f"Error with open map: {e}")
 
 
+    # Функция для отображения мини-карты
     def view_map(self, zoom):
         if self.dict_meta["Latitude"] and self.dict_meta["Longitude"]:
             try:
@@ -88,36 +91,41 @@ class ObserverWindow(QMainWindow, Ui_MainWindow):
     def open_gallery(self):
         self.gallery_form.show()
 
+
+    # Выбор файла для поиска метаданных
     def choose_file(self):
         try:
-            print("\nНОВЫЙ ВЫВОД:")
             self.file_path = QFileDialog.getOpenFileName(self, 'Выбор файла',
                                                          self.resource_path("\\var"),
                                                          'Изображения (*.png *.jpg *.jpeg)')
-            #self.file_path = QFileDialog.getOpenFileName(self, 'Выбор файла', "C:\\Users\levch\Documents\ВУЗ\ЯП\\5 семестр (Python Web)\Семестровая_1\\var", 'Изображения (*.png *.jpg *.jpeg)')
             if not self.file_path:
                 print("Файл не выбран.")
                 return
-
             self.image_viewer.setImage(self.file_path[0])
 
             if self.file_path[0].lower().endswith("jpeg"):
-                self.image_viewer.rotate_clockwise_90()
-
+               self.image_viewer.rotate_clockwise_90()
+            '''
+            После выбора файла происходит извлечение метаданных,
+            добавление записей в БД, заполнение таблицы и попытка отображения карты 
+            '''
             self.catch_metadata()
             self.insert_to_database()
             self.filling_table()
-            self.view_map(13) # Указываем увеличение, default = 13
+            self.view_map(13)  # Указываем увеличение, default = 13
 
         except Exception as e:
-            print(f"Ошибка при выборе или обработке файла: {e}")
+            print(f"Error with choose or processing file: {e}")
 
 
+    # Преобразование метаданных в словарь для последующего занесения в БД
     def catch_metadata(self):
         metadata = ImageMetadataExtractor(self.file_path[0])
         self.dict_meta = metadata.get_metadata_dict()
         print("Caught metadata in dictionary (for insert into DataBase):\n\t", self.dict_meta)
 
+
+    # Непосредственное добавление в БД словаря с метаданными
     def insert_to_database(self):
         try:
             self.db.connect()
@@ -126,12 +134,13 @@ class ObserverWindow(QMainWindow, Ui_MainWindow):
             self.db.close()
 
         except Exception as e:
-            print(f"Ошибка при добавлении в базу данных: {e}")
+            print(f"Error with insert to database: {e}")
 
 
+    # Заполнение таблицы метаданными
     def filling_table(self):
         keys_order = [
-            "NameFile","Make", "Model", "Software", "DateTime",
+            "NameFile", "Make", "Model", "Software", "DateTime",
             "HostComputer", "Mode", "Flash", "ColorSpace",
             "ExifImageWidth", "ExifImageHeight", "OffsetTime",
             "Latitude", "Longitude"
@@ -147,18 +156,17 @@ class ObserverWindow(QMainWindow, Ui_MainWindow):
             val = self.dict_meta.get(key, "") if self.dict_meta.get(key) is not None else ""
             self.metadata_table.setItem(row, 1, QTableWidgetItem(str(val)))
 
+
     @staticmethod
     def resource_path(relative_path):
         if getattr(sys, 'frozen', False):
             base_path = sys._MEIPASS
-            files = os.listdir(base_path)
-            for filename in files:
-                print(filename)
         else:
             base_path = os.path.abspath(".")
 
         path = base_path + relative_path
         return path
+
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key.Key_Return:
@@ -167,5 +175,3 @@ class ObserverWindow(QMainWindow, Ui_MainWindow):
             self.close()
         else:
             super().keyPressEvent(event)
-
-

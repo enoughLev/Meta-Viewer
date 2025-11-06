@@ -1,31 +1,65 @@
 import sqlite3
 
+
 class MetadataDatabase:
     def __init__(self, db_path):
         self.cursor = None
         self.conn = None
         self.db_path = db_path
 
+
     def connect(self):
         self.conn = sqlite3.connect(self.db_path)
         self.cursor = self.conn.cursor()
+
 
     def close(self):
         if hasattr(self, 'conn'):
             self.conn.close()
 
+
+    # Получение картинки и данных из БД
+    def fetch_images_and_names(self):
+        query = '''
+        SELECT metadata_table.id, metadata_table.NameFile, image_table.Image
+        FROM metadata_table
+        JOIN image_table ON metadata_table.id = image_table.id
+        '''
+        self.cursor.execute(query)
+        rows = self.cursor.fetchall()
+        result = {}
+        for id_, name, image_data in rows:
+            result[id_] = [name, image_data]  # в значении список: [название, фото (байты)]
+
+        return result
+
+
+    # Удаление данных из БД
+    # также очищает порядок инкрементации, чтобы корректно добавлять новые записи
+    def delete_row(self, row_id):
+        try:
+            delete_meta = "DELETE FROM metadata_table WHERE id = ?"
+            delete_photo = "DELETE FROM image_table WHERE id = ?"
+            self.cursor.execute(delete_meta, (row_id,))
+            self.cursor.execute(delete_photo, (row_id,))
+            update_meta = "UPDATE sqlite_sequence SET seq = 0 WHERE name = 'metadata_table'"
+            update_image = "UPDATE sqlite_sequence SET seq = 0 WHERE name = 'image_table'"
+            self.cursor.execute(update_meta)
+            self.cursor.execute(update_image)
+            self.conn.commit()
+
+            print(f"Deleted row with ID {row_id} from database")
+        except Exception as e:
+            print(f"Error deleting row with ID {row_id}: {e}")
+
+
+    # Загрузка метаданных в metadata_table
     def insert_metadata(self, data):
-        """
-        Вставляет данные в таблицу с указанными полями.
-        При ошибках выводит подробное сообщение.
-        """
         columns = (
             "NameFile, Make, Model, Software, DateTime, HostComputer, Mode, Flash, "
             "ColorSpace, ExifImageWidth, ExifImageHeight, OffsetTime, Latitude, Longitude"
         )
-
         placeholders = ', '.join('?' for _ in columns.split(', '))
-
         sql = f"INSERT INTO metadata_table ({columns}) VALUES ({placeholders})"
 
         try:
@@ -43,20 +77,12 @@ class MetadataDatabase:
 
             self.cursor.execute(sql, tuple(params))
             self.conn.commit()
-        except sqlite3.IntegrityError as e:
-            print(f"Ошибка целостности данных: {e}")
-        except sqlite3.OperationalError as e:
-            print(f"Операционная ошибка SQLite: {e}")
-        except sqlite3.DatabaseError as e:
-            print(f"Ошибка базы данных SQLite: {e}")
         except Exception as e:
-            print(f"Неизвестная ошибка при вставке данных: {e}")
+            print(f"Error with insert metadata: {e}")
 
+
+    # Загрузка изображения в image_table.image
     def insert_image(self, image_path):
-        """
-        Вставляет фотографию из файла image_path в таблицу image_table в поле image.
-        id задается автоматически.
-        """
         try:
             with open(image_path, 'rb') as file:
                 img_blob = file.read()
@@ -65,47 +91,5 @@ class MetadataDatabase:
             self.cursor.execute(sql, (img_blob,))
             self.conn.commit()
             print("Изображение успешно добавлено в базу.")
-        except sqlite3.IntegrityError as e:
-            print(f"Ошибка целостности данных: {e}")
-        except sqlite3.OperationalError as e:
-            print(f"Операционная ошибка SQLite: {e}")
-        except sqlite3.DatabaseError as e:
-            print(f"Ошибка базы данных SQLite: {e}")
         except Exception as e:
-            print(f"Неизвестная ошибка при вставке изображения: {e}")
-
-    def fetch_metadata_by_id(self, record_id):
-        sql = "SELECT * FROM metadata_table WHERE NameFile=?"
-        self.cursor.execute(sql, (record_id,))
-        row = self.cursor.fetchone()
-        if row:
-            columns = [description[0] for description in self.cursor.description]
-            return dict(zip(columns, row))
-        else:
-            return None
-
-    def fetch_metadata_by_filename(self, filename):
-        try:
-            conn = sqlite3.connect(self.db_path)
-            conn.row_factory = sqlite3.Row  # Позволяет получать строки как словари
-            cursor = conn.cursor()
-
-            query = "SELECT * FROM metadata_table WHERE NameFile = ?"
-            cursor.execute(query, (filename,))
-            row = cursor.fetchone()
-
-            if not row:
-                return None
-
-            # Преобразуем sqlite3.Row в обычный словарь, исключая ключ 'id'
-            result = {key: row[key] for key in row.keys() if key != 'id'}
-
-            return result
-
-        except sqlite3.Error as e:
-            print(f"Ошибка при работе с базой данных: {e}")
-            return None
-        except Exception as e:
-            print(f"Неизвестная ошибка: {e}")
-            return None
-
+            print(f"Error with insert image: {e}")

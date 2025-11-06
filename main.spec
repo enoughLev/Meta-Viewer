@@ -17,7 +17,7 @@ a = Analysis(
     ['main.py'],
     pathex=[],
     binaries=[],
-    datas=datas,  # Здесь добавляем список те данных, что хотим упаковать
+    datas=datas,
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
@@ -36,13 +36,14 @@ exe = EXE(
     a.binaries,
     a.zipfiles,
     a.datas,
-    name='MetaViewer',  # Имя exe файла
+    name='MetaViewer',
     debug=False,
     strip=False,
     upx=True,
-    console=True,  # False - если не нужна консоль
+    console=False,
+    #console=True,
     disable_windowed_traceback=False,
     bootloader_ignore_signals=False,
-    runtime_tmpdir=None,  # Папка для распаковки, None - временная
+    runtime_tmpdir=None,
     target_arch=None,
 )

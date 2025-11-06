@@ -25,6 +25,7 @@ class YandexMapHandler:
         logging.debug(f"Запрос к Static Maps API: {url} с параметрами {params}")
         try:
             response = requests.get(url, params=params)
+            print(response)
             response.raise_for_status()
             logging.info("Карта успешно получена от Яндекса")
             return response.content

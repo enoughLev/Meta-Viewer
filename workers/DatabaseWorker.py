@@ -7,32 +7,64 @@ class MetadataDatabase:
         self.conn = None
         self.db_path = db_path
 
-
     def connect(self):
         self.conn = sqlite3.connect(self.db_path)
         self.cursor = self.conn.cursor()
 
-
     def close(self):
-        if hasattr(self, 'conn'):
+        if hasattr(self, "conn"):
             self.conn.close()
 
+    def get_image_by_id(self, image_id):
+        query = "SELECT image FROM image_table WHERE id = ?"
+        self.cursor.execute(query, (image_id,))
+        result = self.cursor.fetchone()
+        if result:
+            return result[0]
+        return None
+
+    def get_metadata_by_id(self, image_id):
+        # Список столбцов , как вы их вставляете
+        columns = (
+            "NameFile",
+            "Make",
+            "Model",
+            "Software",
+            "DateTime",
+            "HostComputer",
+            "Mode",
+            "Flash",
+            "ColorSpace",
+            "ExifImageWidth",
+            "ExifImageHeight",
+            "OffsetTime",
+            "Latitude",
+            "Longitude",
+        )
+        query = f"SELECT {', '.join(columns)} FROM metadata_table WHERE id = ?"
+        self.cursor.execute(query, (image_id,))
+        row = self.cursor.fetchone()
+        if row:
+            return dict(zip(columns, row))
+        return None
 
     # Получение картинки и данных из БД
     def fetch_images_and_names(self):
-        query = '''
+        query = """
         SELECT metadata_table.id, metadata_table.NameFile, image_table.Image
         FROM metadata_table
         JOIN image_table ON metadata_table.id = image_table.id
-        '''
+        """
         self.cursor.execute(query)
         rows = self.cursor.fetchall()
         result = {}
         for id_, name, image_data in rows:
-            result[id_] = [name, image_data]  # в значении список: [название, фото (байты)]
+            result[id_] = [
+                name,
+                image_data,
+            ]  # в значении список: [название, фото (байты)]
 
         return result
-
 
     # Удаление данных из БД
     # также очищает порядок инкрементации, чтобы корректно добавлять новые записи
@@ -42,8 +74,12 @@ class MetadataDatabase:
             delete_photo = "DELETE FROM image_table WHERE id = ?"
             self.cursor.execute(delete_meta, (row_id,))
             self.cursor.execute(delete_photo, (row_id,))
-            update_meta = "UPDATE sqlite_sequence SET seq = 0 WHERE name = 'metadata_table'"
-            update_image = "UPDATE sqlite_sequence SET seq = 0 WHERE name = 'image_table'"
+            update_meta = (
+                "UPDATE sqlite_sequence SET seq = 0 WHERE name = 'metadata_table'"
+            )
+            update_image = (
+                "UPDATE sqlite_sequence SET seq = 0 WHERE name = 'image_table'"
+            )
             self.cursor.execute(update_meta)
             self.cursor.execute(update_image)
             self.conn.commit()
@@ -52,22 +88,21 @@ class MetadataDatabase:
         except Exception as e:
             print(f"Error deleting row with ID {row_id}: {e}")
 
-
     # Загрузка метаданных в metadata_table
     def insert_metadata(self, data):
         columns = (
             "NameFile, Make, Model, Software, DateTime, HostComputer, Mode, Flash, "
             "ColorSpace, ExifImageWidth, ExifImageHeight, OffsetTime, Latitude, Longitude"
         )
-        placeholders = ', '.join('?' for _ in columns.split(', '))
+        placeholders = ", ".join("?" for _ in columns.split(", "))
         sql = f"INSERT INTO metadata_table ({columns}) VALUES ({placeholders})"
 
         try:
-            int_fields = ['Flash', 'ColorSpace', 'ExifImageWidth', 'ExifImageHeight']
-            real_fields = ['Latitude', 'Longitude']
+            int_fields = ["Flash", "ColorSpace", "ExifImageWidth", "ExifImageHeight"]
+            real_fields = ["Latitude", "Longitude"]
 
             params = []
-            for col in columns.split(', '):
+            for col in columns.split(", "):
                 val = data.get(col)
                 if col in int_fields:
                     val = int(val) if val is not None else None
@@ -80,11 +115,10 @@ class MetadataDatabase:
         except Exception as e:
             print(f"Error with insert metadata: {e}")
 
-
     # Загрузка изображения в image_table.image
     def insert_image(self, image_path):
         try:
-            with open(image_path, 'rb') as file:
+            with open(image_path, "rb") as file:
                 img_blob = file.read()
 
             sql = "INSERT INTO image_table (image) VALUES (?)"

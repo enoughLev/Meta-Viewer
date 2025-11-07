@@ -4,12 +4,16 @@ import sys
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QIcon, QPixmap, QTransform
 from PyQt6.QtWidgets import QTableWidgetItem, QWidget, QPushButton, QHBoxLayout
+from PyQt6.QtCore import pyqtSignal
 from Forms.GalleryForm_ui import Ui_Form
 from Workers.DatabaseWorker import MetadataDatabase
 from Workers.PixmapWorker import ScaledPixmapLabel
 
 
 class GalleryWindow(QWidget, Ui_Form):
+    # Сигнал,  который передаёт ID картинки
+    imageSelected = pyqtSignal(int)  # id
+
     def __init__(self):
         super().__init__()
         self.data_base = None
@@ -24,14 +28,14 @@ class GalleryWindow(QWidget, Ui_Form):
         self.galery_table.setColumnWidth(1, 140)
         self.galery_table.setColumnWidth(2, 140)
 
-
     # Отображение таблицы при первичном открытии формы
     def show(self):
-        self.data_base = MetadataDatabase(self.resource_path("\Database\MetaViewerDB.db"))
+        self.data_base = MetadataDatabase(
+            self.resource_path("\Database\MetaViewerDB.db")
+        )
         self.get_meta_from_base()
         self.fill_table()
         super().show()
-
 
     # Получаем данные из БД в виде словаря
     def get_meta_from_base(self):
@@ -41,7 +45,6 @@ class GalleryWindow(QWidget, Ui_Form):
             self.data_base.close()
         except Exception as e:
             print(f"Error wih getting meta from database: {e}")
-
 
     # Прописаны все необходимые действия для заполнения таблицы
     def fill_table(self):
@@ -89,7 +92,10 @@ class GalleryWindow(QWidget, Ui_Form):
                 btn_delete = QPushButton("Удалить")
 
                 # События на кнопки
-                btn_delete.clicked.connect(lambda checked, row_id=id_: self.delete_row_from_base(row_id))
+                btn_open.clicked.connect(lambda checked, row=id_: self.open_image(row))
+                btn_delete.clicked.connect(
+                    lambda checked, row_id=id_: self.delete_row_from_base(row_id)
+                )
 
                 # Контейнер для кнопок
                 container_btn = QWidget()
@@ -105,6 +111,12 @@ class GalleryWindow(QWidget, Ui_Form):
         except Exception as e:
             print(f"Error with filling table: {e}")
 
+    def open_image(self, row):
+        try:
+            self.imageSelected.emit(row)
+            self.close()
+        except Exception as e:
+            print(f"Error: {e}")
 
     # Вызывает методы удаления строки из БД
     # и перезаписи таблицы
@@ -119,15 +131,13 @@ class GalleryWindow(QWidget, Ui_Form):
         except Exception as e:
             print(f"Error: {e}")
 
-
     def open_main_window(self):
         self.close()
-
 
     # Нужно для корректного обращения к файлам в проекте даже в EXE
     @staticmethod
     def resource_path(relative_path):
-        if getattr(sys, 'frozen', False):
+        if getattr(sys, "frozen", False):
             base_path = sys._MEIPASS
         else:
             base_path = os.path.abspath(".")

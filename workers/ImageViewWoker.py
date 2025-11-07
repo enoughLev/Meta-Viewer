@@ -2,9 +2,9 @@ from PyQt6.QtCore import Qt, QPoint
 from PyQt6.QtWidgets import QLabel
 from PyQt6.QtGui import QPixmap, QPainter, QColor, QMouseEvent, QWheelEvent, QTransform
 
-'''
+"""
 Огромный и сложный класс для красивого размещения фото в главном окне...
-'''
+"""
 
 
 class ImageViewer(QLabel):
@@ -23,14 +23,13 @@ class ImageViewer(QLabel):
         self.drag_start_pos = QPoint()  # Объект для центровки фото
         self.offset = QPoint(0, 0)
 
-
     # Функция для поворота изображения
     def rotate_clockwise_90(self):
         if not self.pixmap_original:
             return
         self.current_angle = (self.current_angle + 90) % 180
 
-        transform = (QTransform())
+        transform = QTransform()
         transform.rotate(90)
         transform.translate(0, -self.pixmap_original.width())
         self.pixmap_original = self.pixmap_original.transformed(transform)
@@ -41,9 +40,8 @@ class ImageViewer(QLabel):
 
         self.updatePixmap()
 
-
     # Установка изображения в область
-    def setImage(self, image_path):
+    def setImageFromPath(self, image_path):
         pix = QPixmap(image_path)
         if pix.isNull():
             print("Error with load image")
@@ -59,12 +57,31 @@ class ImageViewer(QLabel):
             int(pix.width() * self.scale_factor),
             int(pix.height() * self.scale_factor),
             Qt.AspectRatioMode.KeepAspectRatio,
-            Qt.TransformationMode.SmoothTransformation
+            Qt.TransformationMode.SmoothTransformation,
         )
 
         self.setAlignment(Qt.AlignmentFlag.AlignCenter)  # Центрируем изображение
         self.setPixmap(scaled_pix)
 
+        # Установка изображения из байтов (Blob)
+
+    def setImageFromBlob(self, image_blob: bytes):
+        # Создаём QPixmap из байтов
+        pix = QPixmap()
+        if not pix.loadFromData(image_blob):
+            print("Error with load image from blob")
+            return
+
+        self.pixmap_original = pix
+        self._center_offset_computed = None  # Сброс центровки
+
+        # Вычисляем масштаб
+        label_size = self.size()
+        scale_w = label_size.width() / pix.width()
+        scale_h = label_size.height() / pix.height()
+        self.scale_factor = min(scale_w, scale_h, 1.0)  # не увеличиваем больше 100%
+
+        self.updatePixmap()
 
     # Обновляет состояние изображения после перетаскивания/увеличения масштаба
     def updatePixmap(self):
@@ -75,16 +92,16 @@ class ImageViewer(QLabel):
         scaled_pix = self.pixmap_original.scaled(
             size,
             Qt.AspectRatioMode.KeepAspectRatio,
-            Qt.TransformationMode.SmoothTransformation
+            Qt.TransformationMode.SmoothTransformation,
         )
 
         final_pix = QPixmap(self.size())
         final_pix.fill(QColor("#333333"))
 
-        if not hasattr(self, '_center_offset_computed'):
+        if not hasattr(self, "_center_offset_computed"):
             self.offset = QPoint(
                 (self.width() - scaled_pix.width()) // 2,
-                (self.height() - scaled_pix.height()) // 2
+                (self.height() - scaled_pix.height()) // 2,
             )
             self._center_offset_computed = True
 
@@ -93,7 +110,6 @@ class ImageViewer(QLabel):
         painter.end()
 
         self.setPixmap(final_pix)
-
 
     # Перегрузка прокручивания колеса мыши
     def wheelEvent(self, event: QWheelEvent):
@@ -121,13 +137,11 @@ class ImageViewer(QLabel):
 
         self.updatePixmap()
 
-
-    # Перегрузка для перетаскивания изображения
+    #  Перегрузка для перетаскивания изображения
     def mousePressEvent(self, event: QMouseEvent):
         if event.button() == Qt.MouseButton.LeftButton:
             self.dragging = True
             self.drag_start_pos = event.pos()
-
 
     # Перегрузка для перетаскивания изображения
     def mouseMoveEvent(self, event: QMouseEvent):
@@ -136,7 +150,6 @@ class ImageViewer(QLabel):
             self.offset += delta
             self.drag_start_pos = event.pos()
             self.updatePixmap()
-
 
     # Перегрузка для перетаскивания изображения
     def mouseReleaseEvent(self, event: QMouseEvent):
